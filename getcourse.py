@@ -30,7 +30,8 @@ def handle_video(url_path, title, order):
     print('..Handling video lecture')
     video_node = f'<div class="alert alert-block alert-info">\n\n#### {order}. {title} (Video Lecture)\n</div>\n\n'
     video_node += f'({url_path})'
-    return 'markdown', video_node
+    video_iframe = f"IFrame('{url_path})', width=900, height=650)"
+    return [('markdown', video_node), ('code', video_iframe)]
 
 
 def handle_exercise(url_path, title, browser, order):
@@ -118,7 +119,8 @@ def handle_quiz(url_path, title, order):
     print('..Handling quiz')
     quiz_node = f'<div class="alert alert-block alert-info">\n\n#### {order}. {title} (Quiz)\n</div>\n\n'
     quiz_node += f'({url_path})'
-    return 'markdown', quiz_node
+    quiz_iframe = f"IFrame('{url_path})', width=900, height=650)"
+    return [('markdown', quiz_node), ('code', quiz_iframe)]
 
 
 def handle_exercise_quiz():
@@ -159,7 +161,7 @@ script_py_xpath = '//*[@id="rendered-view"]/div/div/div[3]/div[1]/div'
 
 # download chrome driver from google, version should match the installed Chrome
 driver_path = 'D:/Chrome/chromedriver.exe'
-output_path = 'D:/DataCamp/CaseStudyInStatisticalThinking/'
+output_path = 'D:/DataCamp/CaseStudyInStatisticalThinking2/'
 
 base_url = 'https://campus.datacamp.com/courses/'
 course_url = 'case-studies-in-statistical-thinking'
@@ -180,7 +182,7 @@ for chapter, number_lesson in chapter_urls:
     main_title = chapter + '-crawled'
     # print(main_title)
 
-    import_code = 'import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns'
+    import_code = 'import numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nfrom IPython.display import IFrame'
     nodes = [('markdown', '## Self-prepare Data for exercise'), ('code', import_code)]
 
     is_first = False
@@ -215,17 +217,19 @@ for chapter, number_lesson in chapter_urls:
             else:
                 print('Ignore quiz in exercise view')
                 nodes.append(('markdown', f'Unrecognized {url}'))
+                nodes.append(('code', f"IFrame('{url})', width=900, height=650)"))
         else:
             is_video, _ = element_exist(video_xpath, timeout=1)
             if is_video:
-                nodes.append(handle_video(url, title, count_lecture))
+                nodes.extend(handle_video(url, title, count_lecture))
             else:
                 is_quiz, _ = element_exist(quiz_xpath)
                 if is_quiz:
-                    nodes.append(handle_quiz(url, title, count_lecture))
+                    nodes.extend(handle_quiz(url, title, count_lecture))
                 else:
                     print('Cannot recognize Datacamp type')
                     nodes.append(('markdown', f'Unrecognized {url}'))
+                    nodes.append(('code', f"IFrame('{url})', width=900, height=650)"))
         if count_lecture == number_lesson:
             browser.close()
 
